@@ -1349,12 +1349,14 @@ function mountCaderno() {
   $('#pdf').onclick = async () => {
     const m = $('#pdfmsg'); m.textContent = '';
     try {
-      const dl = await claude.use('downloads');
-      if (!dl) { m.textContent = 'O download não está disponível neste ambiente.'; return; }
-      const bin = atob($('#pdf-b64').textContent.trim()), u = new Uint8Array(bin.length);
+      const bin = atob($('#pdf-b64').textContent.replace(/\s+/g, '')), u = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-      await dl.save({ filename: 'Caderno-Direito-das-Obrigacoes.pdf', data: new Blob([u], { type: 'application/pdf' }) });
-      m.textContent = 'PDF enviado.';
+      const url = URL.createObjectURL(new Blob([u], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = 'Caderno-Direito-das-Obrigacoes.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      m.textContent = 'PDF baixado.';
     } catch (e) { m.textContent = e && e.code === 'declined' ? 'Download cancelado.' : 'Não foi possível baixar o PDF.'; }
   };
 }
